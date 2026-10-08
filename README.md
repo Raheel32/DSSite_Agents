@@ -1,0 +1,27 @@
+# AI Agents Service (FastAPI + LangGraph)
+
+Site-agnostic agents. Any website (WordPress, HTML, React) calls these over HTTP.
+
+## Run locally
+```bash
+python -m venv venv && source venv/bin/activate   # Windows: venv\Scripts\activate
+pip install -r requirements.txt
+cp .env.example .env                              # Windows: copy .env.example .env
+uvicorn app.main:app --reload
+```
+Open http://127.0.0.1:8000/docs to test every endpoint in the browser.
+
+## Test
+`python test_fraud.py`
+
+## Agent 4 example call (from any site)
+```js
+fetch("https://YOUR-SERVICE/fraud/check", {
+  method: "POST",
+  headers: {"Content-Type": "application/json"},
+  body: JSON.stringify({
+    order_ref: "ORD-1001", customer_email: "ali@example.com", amount: 4500,
+    payment_method: "cod", ip_address: "103.255.4.10", checkout_seconds: 90
+  })
+}).then(r => r.json()).then(console.log);
+```
