@@ -1,4 +1,4 @@
-databases:
+﻿databases:
   - name: agents-db
     plan: free
     databaseName: agents_db
