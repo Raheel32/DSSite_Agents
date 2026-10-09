@@ -1,4 +1,5 @@
-﻿databases:
+# Render Blueprint: creates the web service + PostgreSQL database in one go.
+databases:
   - name: agents-db
     plan: free
     databaseName: agents_db
@@ -15,11 +16,15 @@ services:
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.9
-      - key: DATABASE_URL
+      - key: DATABASE_URL          # filled automatically from the database above
         fromDatabase:
           name: agents-db
           property: connectionString
-      - key: GOOGLE_API_KEY
+      - key: GOOGLE_API_KEY        # you type these in the Render dashboard
         sync: false
       - key: TAVILY_API_KEY
+        sync: false
+      - key: ADMIN_API_KEY         # protects /admin data and /approve-refund
+        sync: false
+      - key: SITE_API_KEY          # the key your website sends with requests
         sync: false

@@ -73,3 +73,16 @@ def list_flagged(db: Session = Depends(get_db)):
         )
         for r in rows
     ]
+
+
+@router.get("/history", response_model=List[FraudResult])
+def history(limit: int = 20, db: Session = Depends(get_db)):
+    """Latest fraud checks (Safe and Flagged) - handy for debugging."""
+    rows = db.query(FraudCheck).order_by(FraudCheck.created_at.desc()).limit(limit).all()
+    return [
+        FraudResult(
+            check_id=r.id, order_ref=r.order_ref, fraud_score=r.fraud_score,
+            verdict=r.verdict, reasons=r.reasons.split(" | ") if r.reasons else [],
+        )
+        for r in rows
+    ]

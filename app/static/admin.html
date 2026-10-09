@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agents Admin Dashboard</title>
+<style>
+  body{font-family:system-ui,Arial,sans-serif;margin:0;background:#f3f4f6;color:#111}
+  header{background:#0b7fc7;color:#fff;padding:14px 24px;display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+  header h1{font-size:20px;margin:0;flex:1}
+  main{padding:20px 24px;max-width:1200px;margin:auto}
+  section{background:#fff;border-radius:8px;padding:16px;margin-bottom:20px;box-shadow:0 1px 3px #0002}
+  h2{margin:0 0 10px;font-size:17px}
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  th,td{text-align:left;padding:8px;border-bottom:1px solid #e5e7eb;vertical-align:top}
+  th{background:#f9fafb}
+  button{border:0;border-radius:6px;padding:6px 12px;cursor:pointer;font-size:13px}
+  .ok{background:#16a34a;color:#fff}.no{background:#dc2626;color:#fff}.plain{background:#fff;color:#0b7fc7}
+  .tag{padding:2px 8px;border-radius:99px;font-size:12px;background:#e5e7eb}
+  .pending_approval{background:#fde68a}.approved,.auto_approved{background:#bbf7d0}
+  .rejected,.auto_rejected,.Flagged{background:#fecaca}
+  input{padding:6px;border-radius:6px;border:1px solid #ccc}
+  #msg{padding:8px 24px;color:#b91c1c}
+  .empty{color:#6b7280;padding:8px}
+</style>
+</head>
+<body>
+<header>
+  <h1>Agents Admin Dashboard</h1>
+  <label>Admin key <input id="key" type="password" placeholder="ADMIN_API_KEY"></label>
+  <button class="plain" id="save">Save &amp; load</button>
+</header>
+<div id="msg"></div>
+<main>
+  <section><h2>Pending refund approvals (Agent 1)</h2><div id="pending"></div></section>
+  <section><h2>Recent refund requests</h2><div id="recent"></div></section>
+  <section><h2>Flagged orders (Agent 4 - fraud)</h2><div id="flagged"></div></section>
+</main>
+<script>
+// Everything that comes from customers is escaped before it is shown (prevents XSS).
+function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+const $=id=>document.getElementById(id);
+$('key').value=sessionStorage.getItem('akey')||'';
+
+async function api(path,opts={}){
+  opts.headers=Object.assign({'Content-Type':'application/json','X-Admin-Key':sessionStorage.getItem('akey')||''},opts.headers||{});
+  const r=await fetch(path,opts);
+  if(!r.ok){throw new Error(r.status+' '+(await r.text()));}
+  return r.json();
+}
+function table(cols,rows){
+  if(!rows.length)return '<div class="empty">Nothing here.</div>';
+  return '<table><tr>'+cols.map(c=>'<th>'+esc(c[0])+'</th>').join('')+'</tr>'+
+    rows.map(r=>'<tr>'+cols.map(c=>'<td>'+c[1](r)+'</td>').join('')+'</tr>').join('')+'</table>';
+}
+const tag=s=>'<span class="tag '+esc(s)+'">'+esc(s)+'</span>';
+const when=d=>d?esc(new Date(d+'Z').toLocaleString()):'';
+
+async function load(){
+  $('msg').textContent='';
+  try{
+    const pending=await api('/refund/requests?status=pending_approval');
+    $('pending').innerHTML=table([
+      ['ID',r=>esc(r.id)],['Order',r=>esc(r.order_ref)],['Customer',r=>esc(r.customer_email)],
+      ['Amount (Rs)',r=>esc(Number(r.refund_amount).toLocaleString())],
+      ['Customer message',r=>esc(r.message)],['Why it needs you',r=>esc(r.reason)],
+      ['When',r=>when(r.created_at)],
+      ['Decision',r=>'<button class="ok" data-id="'+esc(r.id)+'" data-d="approve">Approve</button> '+
+                    '<button class="no" data-id="'+esc(r.id)+'" data-d="reject">Reject</button>']
+    ],pending);
+    const recent=await api('/refund/requests?limit=20');
+    $('recent').innerHTML=table([
+      ['ID',r=>esc(r.id)],['Order',r=>esc(r.order_ref)],['Intent',r=>esc(r.intent)],
+      ['Status',r=>tag(r.status)],['Reason',r=>esc(r.reason)],['When',r=>when(r.created_at)]
+    ],recent);
+    const flagged=await api('/fraud/flagged');
+    $('flagged').innerHTML=table([
+      ['Check',r=>esc(r.check_id)],['Order',r=>esc(r.order_ref)],['Score',r=>esc(r.fraud_score)],
+      ['Verdict',r=>tag(r.verdict)],['Reasons',r=>esc((r.reasons||[]).join('; '))]
+    ],flagged);
+  }catch(e){$('msg').textContent='Could not load: '+e.message;}
+}
+$('save').onclick=()=>{sessionStorage.setItem('akey',$('key').value);load();};
+$('pending').addEventListener('click',async ev=>{
+  const b=ev.target.closest('button[data-id]'); if(!b)return;
+  const note=prompt('Optional note for this '+b.dataset.d+' decision:')||'';
+  try{
+    await api('/approve-refund',{method:'POST',body:JSON.stringify({request_id:Number(b.dataset.id),decision:b.dataset.d,note})});
+    load();
+  }catch(e){$('msg').textContent='Failed: '+e.message;}
+});
+load();
+</script>
+</body>
+</html>

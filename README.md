@@ -25,3 +25,12 @@ fetch("https://YOUR-SERVICE/fraud/check", {
   })
 }).then(r => r.json()).then(console.log);
 ```
+
+
+## Agent 1 - Refund & Escalation
+* `POST /refund/request`  - website sends order_ref, email, message (+ order facts)
+* `POST /approve-refund`  - admin approves / rejects a paused request
+* `GET  /refund/requests` - admin list (`?status=pending_approval`)
+* `GET  /admin`           - admin dashboard (enter your ADMIN_API_KEY)
+Test: `python test_refund.py`   |   Policy numbers: top of `app/agents/refund_agent.py`
+WordPress form: `wordpress/refund_form_snippet.php`

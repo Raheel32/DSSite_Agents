@@ -13,7 +13,7 @@ from typing import Annotated, List, TypedDict
 
 from langgraph.graph import StateGraph, START, END
 
-FLAG_THRESHOLD = 25          # total score >= 50  -> "Flagged"
+FLAG_THRESHOLD = 50          # total score >= 50  -> "Flagged"
 HIGH_COD_AMOUNT = 20000      # big Cash-on-Delivery orders are riskier
 VERY_HIGH_AMOUNT = 50000
 BLOCKED_IPS = {"203.0.113.66", "198.51.100.23"}  # sample blocklist (demo only)

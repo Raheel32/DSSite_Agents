@@ -45,3 +45,22 @@ class FraudCheck(Base):
     verdict: Mapped[str] = mapped_column(String(10))  # "Safe" or "Flagged"
     reasons: Mapped[str] = mapped_column(Text, default="")  # joined with " | "
     created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
+
+
+class RefundRequest(Base):
+    """One row per refund/cancel request handled by Agent 1."""
+    __tablename__ = "refund_requests"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    order_ref: Mapped[str] = mapped_column(String(50), index=True)
+    customer_email: Mapped[str] = mapped_column(String(120))
+    message: Mapped[str] = mapped_column(Text, default="")
+    intent: Mapped[str] = mapped_column(String(20), default="")
+    refund_amount: Mapped[float] = mapped_column(Float, default=0)
+    # auto_approved | auto_rejected | pending_approval | approved | rejected
+    status: Mapped[str] = mapped_column(String(20), default="processing", index=True)
+    reason: Mapped[str] = mapped_column(Text, default="")
+    steps: Mapped[str] = mapped_column(Text, default="")          # agent trace, one step per line
+    state_json: Mapped[str] = mapped_column(Text, default="")     # saved graph state (for resume)
+    admin_note: Mapped[str] = mapped_column(Text, default="")
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
+    decided_at: Mapped[datetime] = mapped_column(DateTime, nullable=True)
