@@ -78,7 +78,7 @@ def detect_intent(message: str):
             from langchain_google_genai import ChatGoogleGenerativeAI
 
             llm = ChatGoogleGenerativeAI(
-                model=os.getenv("GEMINI_MODEL", "gemini-2.5-flash"),
+                model=os.getenv("GEMINI_MODEL", "gemini-flash-latest"),   # alias for the current Flash model
                 google_api_key=key,
                 temperature=0,
             )
@@ -98,7 +98,8 @@ def detect_intent(message: str):
                 if intent in answer:
                     return intent, "gemini"
         except Exception:
-            pass   # any Gemini problem -> fall back to keywords, never break the request
+            # any Gemini problem (bad key, retired model, no quota) -> keywords, never break the request
+            return keyword_intent(message), "keywords - Gemini call failed"
     return keyword_intent(message), "keywords"
 
 
