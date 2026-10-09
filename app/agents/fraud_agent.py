@@ -123,3 +123,7 @@ def run_fraud_check(order: dict, history: dict) -> dict:
     return fraud_graph.invoke(
         {"order": order, "history": history, "fraud_score": 0, "reasons": [], "verdict": ""}
     )
+
+##git add .
+##git commit -m "Use psycopg2 driver explicitly for PostgreSQL"
+##git push
