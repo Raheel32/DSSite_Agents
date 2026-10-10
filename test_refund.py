@@ -4,12 +4,12 @@ from datetime import datetime, timedelta, timezone
 
 from fastapi.testclient import TestClient
 
-os.environ.pop("GOOGLE_API_KEY", None)      # test the keyword fallback
-os.environ.pop("ADMIN_API_KEY", None)
-os.environ.pop("SITE_API_KEY", None)
-
-from app.main import app
+from app.main import app          # importing the app loads your .env file...
 from app.agents import refund_agent
+
+# ...so remove the keys AFTER the import: these tests must run on the keyword fallback, not real Gemini
+for key in ("GOOGLE_API_KEY", "SITE_API_KEY", "ADMIN_API_KEY"):
+    os.environ.pop(key, None)
 
 
 def ago(**kw):
