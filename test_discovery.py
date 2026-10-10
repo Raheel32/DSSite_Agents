@@ -1,11 +1,12 @@
 """Self-test for Agent 2:  python test_discovery.py"""
 import os
-os.environ.pop("GOOGLE_API_KEY", None)
-os.environ.pop("SITE_API_KEY", None)
-os.environ.pop("ADMIN_API_KEY", None)
 
 from fastapi.testclient import TestClient
-from app.main import app
+from app.main import app          # importing the app loads your .env file...
+
+# ...so remove the keys AFTER the import: these tests must run on the offline rules, not on real Gemini
+for key in ("GOOGLE_API_KEY", "SITE_API_KEY", "ADMIN_API_KEY"):
+    os.environ.pop(key, None)
 
 
 def names(resp):
@@ -58,7 +59,8 @@ with TestClient(app) as c:
     print("  ", names(r), r["interpretation"]["items"])
     assert names(r) == ["KISAN COOKING OIL 5 Liter"]              # ghee is Rs 3,125 (over), sold-out oil hidden
     r = c.post("/recommendations", json={"query": "ghee"}).json()
-    assert r["results"][0]["url"] == ""                            # unsafe link was blanked
+    dalda = next(x for x in r["results"] if x["name"].startswith("DALDA"))
+    assert dalda["url"] == ""                                      # unsafe 'javascript:' link was blanked
 
     # 6. update an existing product (price drop) + delete one
     up = c.post("/catalog/products", json={"products": [
