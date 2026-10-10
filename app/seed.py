@@ -1,7 +1,7 @@
 """Small SAMPLE dataset so you can test without a real shop.
 Runs automatically on startup, but only if the tables are empty."""
 from sqlalchemy.orm import Session
-from .models import Product, Order
+from .models import CatalogProduct, Order, Product
 
 PRODUCTS = [
     ("Winter Puffer Jacket", "jackets", 4200, "Warm padded jacket for cold weather"),
@@ -27,5 +27,11 @@ def seed_if_empty(db: Session) -> None:
     if db.query(Order).count() == 0:
         db.add_all(
             Order(order_ref=r, customer_email=e, amount=a, payment_method=m) for r, e, a, m in ORDERS
+        )
+    if db.query(CatalogProduct).count() == 0:
+        # sample catalog for testing; replaced automatically when your real products sync in
+        db.add_all(
+            CatalogProduct(external_id=f"sample-{i}", name=n, category=c, price=p, description=d)
+            for i, (n, c, p, d) in enumerate(PRODUCTS, start=1)
         )
     db.commit()

@@ -2,6 +2,7 @@
  * Code Snippets (type: PHP, run everywhere).
  * Adds the shortcode [ds_refund_form] - put it on a page (e.g. "Request a Refund").
  * The order facts are read from WooCommerce on the SERVER, so customers cannot fake them.
+ * NOTE: this version avoids PHP closing tags on purpose, because Code Snippets can choke on them.
  */
 add_shortcode('ds_refund_form', function () {
     $api      = 'https://ai-agents-service-tdhq.onrender.com/refund/request';
@@ -32,9 +33,15 @@ add_shortcode('ds_refund_form', function () {
                 ],
             ];
             $headers = ['Content-Type' => 'application/json'];
-            if ($site_key !== '') { $headers['X-Site-Key'] = $site_key; }
+            if ($site_key !== '') {
+                $headers['X-Site-Key'] = $site_key;
+            }
 
-            $res = wp_remote_post($api, ['timeout' => 60, 'headers' => $headers, 'body' => wp_json_encode($payload)]);
+            $res = wp_remote_post($api, [
+                'timeout' => 60,
+                'headers' => $headers,
+                'body'    => wp_json_encode($payload),
+            ]);
 
             if (is_wp_error($res)) {
                 $out .= '<p><strong>Sorry, our refund service is busy. Please try again in a minute.</strong></p>';
@@ -59,14 +66,15 @@ add_shortcode('ds_refund_form', function () {
         }
     }
 
-    ob_start(); ?>
-    <form method="post" class="ds-refund-form">
-        <?php wp_nonce_field('ds_refund'); ?>
-        <p><label>Order number<br><input type="number" name="order_no" required></label></p>
-        <p><label>Email used for the order<br><input type="email" name="email" required></label></p>
-        <p><label>What went wrong?<br><textarea name="message" rows="4" required></textarea></label></p>
-        <p><button type="submit" name="ds_refund_submit" value="1">Request refund / cancellation</button></p>
-    </form>
-    <?php
-    return $out . ob_get_clean();
+    $nonce = wp_nonce_field('ds_refund', '_wpnonce', true, false);
+
+    $form  = '<form method="post" class="ds-refund-form">';
+    $form .= $nonce;
+    $form .= '<p><label>Order number<br><input type="number" name="order_no" required></label></p>';
+    $form .= '<p><label>Email used for the order<br><input type="email" name="email" required></label></p>';
+    $form .= '<p><label>What went wrong?<br><textarea name="message" rows="4" required></textarea></label></p>';
+    $form .= '<p><button type="submit" name="ds_refund_submit" value="1">Request refund / cancellation</button></p>';
+    $form .= '</form>';
+
+    return $out . $form;
 });

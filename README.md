@@ -34,3 +34,11 @@ fetch("https://YOUR-SERVICE/fraud/check", {
 * `GET  /admin`           - admin dashboard (enter your ADMIN_API_KEY)
 Test: `python test_refund.py`   |   Policy numbers: top of `app/agents/refund_agent.py`
 WordPress form: `wordpress/refund_form_snippet.php`
+
+## Agent 2 - Product Discovery
+* `POST /recommendations`            - search text (+ optional purchase history) -> best products
+* `POST /catalog/products`           - website pushes new/updated products (up to 200 per call)
+* `DELETE /catalog/products/{id}`    - website removes a product
+* `GET /catalog/stats`               - admin: how many products the agent knows
+Test: `python test_discovery.py`
+WordPress: `wordpress/catalog_sync_snippet.php` (auto-sync) and `wordpress/ai_search_snippet.php` (search box)

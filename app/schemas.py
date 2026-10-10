@@ -1,7 +1,7 @@
 """Request / response shapes (Pydantic). This is the 'contract' any website follows."""
 from datetime import datetime
 from typing import Literal, Optional, List
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 
 class FraudRequest(BaseModel):
@@ -76,3 +76,50 @@ class RefundRecord(BaseModel):
     admin_note: str
     created_at: datetime
     decided_at: Optional[datetime] = None
+
+
+# ----------------------------------------------------- Agent 2: Product discovery
+class CatalogProductIn(BaseModel):
+    external_id: str = Field(..., max_length=64, examples=["1234"])
+    name: str = Field(..., max_length=200)
+    price: float = Field(..., ge=0)
+    category: str = Field("", max_length=300)
+    description: str = Field("", max_length=1000)
+    url: str = Field("", max_length=500)
+    image_url: str = Field("", max_length=500)
+    in_stock: bool = True
+
+    @field_validator("url", "image_url")
+    @classmethod
+    def only_web_links(cls, v: str) -> str:
+        # these get shown as links/images on the website, so only allow http(s)
+        return v if v.lower().startswith(("http://", "https://")) else ""
+
+
+class CatalogSyncIn(BaseModel):
+    products: List[CatalogProductIn] = Field(..., max_length=200)
+
+
+class RecommendIn(BaseModel):
+    query: str = Field(..., min_length=2, max_length=300, examples=["winter jacket and shoes under 5000"])
+    customer_email: Optional[str] = None
+    purchased_product_ids: List[str] = Field(default_factory=list, max_length=100)
+    limit: int = Field(10, ge=1, le=30)
+
+
+class ProductHit(BaseModel):
+    id: str
+    name: str
+    price: float
+    category: str
+    url: str
+    image_url: str
+    score: float
+    matched: List[str]
+
+
+class RecommendOut(BaseModel):
+    query: str
+    interpretation: dict
+    results: List[ProductHit]
+    steps: List[str]

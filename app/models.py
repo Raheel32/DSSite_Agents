@@ -4,7 +4,7 @@ Product / Order  -> small SAMPLE dataset used for testing (later agents use it).
 FraudCheck       -> every fraud verdict is saved here (Agent 4 output + history).
 """
 from datetime import datetime, timezone
-from sqlalchemy import String, Float, Integer, Text, DateTime
+from sqlalchemy import Boolean, String, Float, Integer, Text, DateTime
 from sqlalchemy.orm import Mapped, mapped_column
 from .database import Base
 
@@ -64,3 +64,19 @@ class RefundRequest(Base):
     admin_note: Mapped[str] = mapped_column(Text, default="")
     created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
     decided_at: Mapped[datetime] = mapped_column(DateTime, nullable=True)
+
+
+class CatalogProduct(Base):
+    """The agent's own copy of the shop catalog (kept in sync by the website).
+    external_id = the product id on YOUR site (e.g. the WooCommerce product id)."""
+    __tablename__ = "catalog_products"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    external_id: Mapped[str] = mapped_column(String(64), unique=True, index=True)
+    name: Mapped[str] = mapped_column(String(200))
+    category: Mapped[str] = mapped_column(String(300), default="")
+    price: Mapped[float] = mapped_column(Float, default=0)
+    description: Mapped[str] = mapped_column(Text, default="")
+    url: Mapped[str] = mapped_column(String(500), default="")
+    image_url: Mapped[str] = mapped_column(String(500), default="")
+    in_stock: Mapped[bool] = mapped_column(Boolean, default=True)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow, onupdate=utcnow)
