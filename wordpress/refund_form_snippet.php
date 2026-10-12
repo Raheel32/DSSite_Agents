@@ -6,7 +6,7 @@
  */
 add_shortcode('ds_refund_form', function () {
     $api      = 'https://ai-agents-service-tdhq.onrender.com/refund/request';
-    $site_key = '';   // paste the SAME value you set as SITE_API_KEY on Render ('' = no key)
+    $site_key = defined('DS_AGENTS_SITE_KEY') ? DS_AGENTS_SITE_KEY : '';   // set in the config snippet
     $out      = '';
 
     if (isset($_POST['ds_refund_submit'], $_POST['_wpnonce']) && wp_verify_nonce($_POST['_wpnonce'], 'ds_refund')) {

@@ -42,3 +42,19 @@ WordPress form: `wordpress/refund_form_snippet.php`
 * `GET /catalog/stats`               - admin: how many products the agent knows
 Test: `python test_discovery.py`
 WordPress: `wordpress/catalog_sync_snippet.php` (auto-sync) and `wordpress/ai_search_snippet.php` (search box)
+
+## Admin inside WordPress
+`wordpress/admin_dashboard_snippet.php` adds WooCommerce > "AI Agents" (approve/reject refunds, fraud flags).
+Set `DISABLE_ADMIN_PAGE=1` on Render to turn off the separate /admin page.
+
+## Smart search inside the existing WordPress search
+`wordpress/ai_search_integration_snippet.php` makes the normal product search use Agent 2 (falls back to
+normal WordPress search if the agent is slow or finds nothing).
+
+Paste your secret keys ONLY in `wordpress/ds_agents_config_snippet.php` (priority 1); every other snippet reads them from there.
+
+## Agent 5 - Product Onboarding & SEO
+* `POST /onboarding/product` - photo (base64) + name (+ your category names) -> description, SEO title/meta, tags, category
+Loop: extract_details (Gemini Vision) -> generate_description -> validation_node -> retry with feedback (max 3)
+Test: `python test_onboarding.py`   |   Rules: top of `app/agents/onboarding_agent.py`
+WordPress: `wordpress/onboarding_page_snippet.php` adds WooCommerce > "AI Product Onboarding" (creates a Draft product)

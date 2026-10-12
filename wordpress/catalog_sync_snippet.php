@@ -8,7 +8,7 @@
  */
 if (!function_exists('ds_agents_request')) {
     function ds_agents_request($path, $method, $body = null, $blocking = true) {
-        $site_key = '';   // paste the SAME value you set as SITE_API_KEY on Render ('' = no key)
+        $site_key = defined('DS_AGENTS_SITE_KEY') ? DS_AGENTS_SITE_KEY : '';   // set in the config snippet
         $args = [
             'method'   => $method,
             'timeout'  => $blocking ? 60 : 0.01,   // non-blocking calls do not slow down the admin

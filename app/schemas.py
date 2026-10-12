@@ -1,7 +1,9 @@
 """Request / response shapes (Pydantic). This is the 'contract' any website follows."""
 from datetime import datetime
 from typing import Literal, Optional, List
-from pydantic import BaseModel, Field, field_validator
+import base64
+
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 
 class FraudRequest(BaseModel):
@@ -122,4 +124,55 @@ class RecommendOut(BaseModel):
     query: str
     interpretation: dict
     results: List[ProductHit]
+    steps: List[str]
+
+
+# ------------------------------------------------- Agent 5: Product onboarding & SEO
+MAX_IMAGE_BYTES = 4 * 1024 * 1024
+
+
+class OnboardIn(BaseModel):
+    name: str = Field(..., min_length=2, max_length=150, examples=["Kisan Cooking Oil 5 Liter"])
+    image_base64: str = Field(..., description="The product photo, base64 encoded (max 4 MB)")
+    mime_type: Literal["image/jpeg", "image/png", "image/webp"] = "image/jpeg"
+    categories: List[str] = Field(default_factory=list, max_length=200,
+                                  description="Your existing category names; the agent picks one")
+
+    @field_validator("categories")
+    @classmethod
+    def clean_categories(cls, v: List[str]) -> List[str]:
+        return [c.strip()[:100] for c in v if c.strip()]
+
+    @model_validator(mode="after")
+    def check_image(self):
+        try:
+            raw = base64.b64decode(self.image_base64, validate=True)
+        except Exception:
+            raise ValueError("image_base64 is not valid base64")
+        if not raw or len(raw) > MAX_IMAGE_BYTES:
+            raise ValueError("image must be between 1 byte and 4 MB")
+        looks_like = {
+            "image/jpeg": raw.startswith(b"\xff\xd8"),
+            "image/png": raw.startswith(b"\x89PNG"),
+            "image/webp": raw[:4] == b"RIFF" and raw[8:12] == b"WEBP",
+        }
+        if not looks_like[self.mime_type]:
+            raise ValueError("the file content does not match mime_type")
+        return self
+
+
+class OnboardOut(BaseModel):
+    status: Literal["approved", "needs_review"]
+    mode: str
+    attempts: int
+    title: str
+    short_description: str
+    description: str
+    seo_title: str
+    meta_description: str
+    tags: List[str]
+    category: str
+    focus_keyword: str
+    issues: List[str]
+    details: dict
     steps: List[str]
