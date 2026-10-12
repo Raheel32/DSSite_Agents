@@ -103,7 +103,8 @@ def llm_parse(query: str) -> Optional[dict]:
         from langchain_google_genai import ChatGoogleGenerativeAI
 
         llm = ChatGoogleGenerativeAI(
-            model=os.getenv("GEMINI_MODEL", "gemini-flash-latest"), google_api_key=key, temperature=0
+            model=os.getenv("GEMINI_MODEL", "gemini-flash-latest"), google_api_key=key, temperature=0,
+            timeout=6, max_retries=1,    # fail fast: a slow Gemini must never make a search hang
         )
         prompt = (
             "You turn a shopper's search into JSON for a grocery/general store. Reply with ONLY JSON like:\n"

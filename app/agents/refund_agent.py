@@ -81,6 +81,8 @@ def detect_intent(message: str):
                 model=os.getenv("GEMINI_MODEL", "gemini-flash-latest"),   # alias for the current Flash model
                 google_api_key=key,
                 temperature=0,
+                timeout=6,         # fail fast: a slow Gemini must never make a request hang
+                max_retries=1,     # (the default is 6 retries, which can take minutes)
             )
             prompt = (
                 "You classify customer messages for a grocery shop. "
