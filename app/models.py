@@ -80,3 +80,23 @@ class CatalogProduct(Base):
     image_url: Mapped[str] = mapped_column(String(500), default="")
     in_stock: Mapped[bool] = mapped_column(Boolean, default=True)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow, onupdate=utcnow)
+
+
+class PriceAudit(Base):
+    """One competitor-price audit done by Agent 3."""
+    __tablename__ = "price_audits"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    product_id: Mapped[str] = mapped_column(String(64), default="", index=True)
+    name: Mapped[str] = mapped_column(String(200))
+    our_price: Mapped[float] = mapped_column(Float)
+    suggestion: Mapped[str] = mapped_column(String(10))            # lower | raise | keep | no_data
+    suggested_price: Mapped[float] = mapped_column(Float, nullable=True)
+    confidence: Mapped[str] = mapped_column(String(10), default="low")
+    summary: Mapped[str] = mapped_column(Text, default="")
+    offers_json: Mapped[str] = mapped_column(Text, default="[]")
+    market_json: Mapped[str] = mapped_column(Text, default="{}")
+    steps: Mapped[str] = mapped_column(Text, default="")
+    iterations: Mapped[int] = mapped_column(Integer, default=0)
+    method: Mapped[str] = mapped_column(String(10), default="")    # gemini | regex
+    status: Mapped[str] = mapped_column(String(10), default="suggested", index=True)   # suggested | applied | dismissed
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)

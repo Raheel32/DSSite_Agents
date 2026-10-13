@@ -58,3 +58,11 @@ Paste your secret keys ONLY in `wordpress/ds_agents_config_snippet.php` (priorit
 Loop: extract_details (Gemini Vision) -> generate_description -> validation_node -> retry with feedback (max 3)
 Test: `python test_onboarding.py`   |   Rules: top of `app/agents/onboarding_agent.py`
 WordPress: `wordpress/onboarding_page_snippet.php` adds WooCommerce > "AI Product Onboarding" (creates a Draft product)
+
+## Agent 3 - Competitor Pricing Auditor
+* `POST /pricing/audit`              - (admin key) audit one product: searches Pakistani stores via Tavily
+* `GET  /pricing/audits`             - (admin key) recent audits
+* `POST /pricing/audits/{id}/status` - (admin key) mark a suggestion applied / dismissed
+Loop: plan_query -> search_web (Tavily) -> extract_prices (Gemini or regex) -> reviewer_node -> search again or recommend
+Test: `python test_pricing.py`   |   Settings: top of `app/agents/pricing_agent.py`
+WordPress: `wordpress/price_audit_page_snippet.php` adds WooCommerce > "AI Price Audit"

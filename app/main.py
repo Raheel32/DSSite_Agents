@@ -5,7 +5,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from .database import Base, engine, SessionLocal
-from .routers import admin, catalog, fraud, onboarding, recommendations, refund
+from .routers import admin, catalog, fraud, onboarding, pricing, recommendations, refund
 from .seed import seed_if_empty
 
 
@@ -30,12 +30,13 @@ app.include_router(refund.router)
 app.include_router(catalog.router)
 app.include_router(recommendations.router)
 app.include_router(onboarding.router)
+app.include_router(pricing.router)
 app.include_router(admin.router)
 
 
 @app.get("/", tags=["System"])
 def root():
-    return {"message": "AI Agents Service is running", "docs": "/docs", "agents": ["/fraud/check", "/refund/request", "/recommendations", "/onboarding/product"], "admin": "/admin"}
+    return {"message": "AI Agents Service is running", "docs": "/docs", "agents": ["/fraud/check", "/refund/request", "/recommendations", "/onboarding/product", "/pricing/audit"], "admin": "/admin"}
 
 
 @app.get("/health", tags=["System"])

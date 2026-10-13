@@ -176,3 +176,47 @@ class OnboardOut(BaseModel):
     issues: List[str]
     details: dict
     steps: List[str]
+
+
+# ---------------------------------------------- Agent 3: Competitor pricing auditor
+class PriceAuditIn(BaseModel):
+    product_id: str = Field("", max_length=64, description="Your product/variation id (optional)")
+    name: str = Field(..., min_length=2, max_length=200, examples=["Kisan Cooking Oil 5 Liter"])
+    our_price: float = Field(..., gt=0, examples=[2875])
+    min_price: Optional[float] = Field(None, ge=0, description="Never suggest a price below this")
+    exclude_domains: List[str] = Field(default_factory=list, max_length=10,
+                                       description="Your own website, so it is not counted as a competitor")
+
+    @field_validator("exclude_domains")
+    @classmethod
+    def clean_domains(cls, v: List[str]) -> List[str]:
+        return [d.strip().lower().replace("https://", "").replace("http://", "").strip("/")[:100] for d in v if d.strip()]
+
+
+class Offer(BaseModel):
+    store: str
+    price: float
+    url: str
+    pack_size: str = ""
+    evidence: str = ""
+
+
+class PriceAuditOut(BaseModel):
+    audit_id: int
+    product_id: str = ""
+    name: str
+    our_price: float
+    suggestion: Literal["lower", "raise", "keep", "no_data"]
+    suggested_price: Optional[float]
+    confidence: Literal["high", "medium", "low"]
+    summary: str
+    market: dict
+    offers: List[Offer]
+    iterations: int
+    method: str
+    status: str
+    steps: List[str]
+
+
+class AuditStatusIn(BaseModel):
+    status: Literal["applied", "dismissed"]
