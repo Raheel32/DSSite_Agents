@@ -1,5 +1,7 @@
 # DSSite Agents
 
+![DSSite Agents](assets/dssite-agents-thumbnail.png)
+
 A site-agnostic AI agents API built with **FastAPI** and **LangGraph**.
 The service exposes HTTP endpoints that a website can call, with
 WordPress/WooCommerce integration snippets included in this repository.
