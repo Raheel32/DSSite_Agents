@@ -1,6 +1,6 @@
 # DSSite Agents
 
-![DSSite Agents](assets/dssite-agents-thumbnail.png)
+![DSSite Agents](assets/DSSite_Agents AI E-Commerce Ecosystem.png)
 
 A site-agnostic AI agents API built with **FastAPI** and **LangGraph**.
 The service exposes HTTP endpoints that a website can call, with
