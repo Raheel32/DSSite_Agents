@@ -1,6 +1,8 @@
 # DSSite Agents
 
-![DSSite Agents](assets/DSSite_Agents AI E-Commerce Ecosystem.png)
+![DSSite Agents: AI-Powered Agents for WordPress and WooCommerce](assets/DSSite_Agents AI E-Commerce Ecosystem.png)
+
+# DSSite Agents
 
 A site-agnostic AI agents API built with **FastAPI** and **LangGraph**.
 The service exposes HTTP endpoints that a website can call, with
