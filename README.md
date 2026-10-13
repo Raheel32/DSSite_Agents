@@ -491,10 +491,7 @@ production order data in issues, commits, or test fixtures.
 
 ## License
 
-No license is specified in this README. Check the repository for a
-`LICENSE` file before reusing, distributing, or modifying the code. If
-you intend to make this project open source, add an explicit license
-that matches your intended terms.
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
 
 ## Disclaimer
 
