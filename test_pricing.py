@@ -1,5 +1,15 @@
 """Self-test for Agent 3:  python test_pricing.py
 (Tavily and Gemini are replaced by fakes, so no keys and no internet are needed.)"""
+import os
+
+# Tests always use their OWN throw-away database (never your real one, wherever .env points)
+os.environ["DATABASE_URL"] = "sqlite:///./test_agents.db"
+if os.path.exists("test_agents.db"):
+    try:
+        os.remove("test_agents.db")
+    except OSError:
+        pass
+
 import json
 import os
 

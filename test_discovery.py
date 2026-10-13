@@ -1,6 +1,15 @@
 """Self-test for Agent 2:  python test_discovery.py"""
 import os
 
+# Tests always use their OWN throw-away database (never your real one, wherever .env points)
+os.environ["DATABASE_URL"] = "sqlite:///./test_agents.db"
+if os.path.exists("test_agents.db"):
+    try:
+        os.remove("test_agents.db")
+    except OSError:
+        pass
+
+
 from fastapi.testclient import TestClient
 from app.main import app          # importing the app loads your .env file...
 
