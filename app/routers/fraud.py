@@ -9,11 +9,12 @@ from ..agents.fraud_agent import run_fraud_check
 from ..database import get_db
 from ..models import FraudCheck, utcnow
 from ..schemas import FraudRequest, FraudResult
+from ..security import require_admin, require_site
 
 router = APIRouter(prefix="/fraud", tags=["Agent 4 - Fraud Detection"])
 
 
-@router.post("/check", response_model=FraudResult)
+@router.post("/check", response_model=FraudResult, dependencies=[Depends(require_site)])
 def check_order(payload: FraudRequest, db: Session = Depends(get_db)):
     """Any website calls this at checkout and gets back Safe / Flagged."""
     # 1) Look up history from OUR database (the agent itself stays DB-free)
@@ -57,7 +58,7 @@ def check_order(payload: FraudRequest, db: Session = Depends(get_db)):
     )
 
 
-@router.get("/flagged", response_model=List[FraudResult])
+@router.get("/flagged", response_model=List[FraudResult], dependencies=[Depends(require_admin)])
 def list_flagged(db: Session = Depends(get_db)):
     """Admin dashboard uses this to review flagged orders."""
     rows = (
@@ -75,7 +76,7 @@ def list_flagged(db: Session = Depends(get_db)):
     ]
 
 
-@router.get("/history", response_model=List[FraudResult])
+@router.get("/history", response_model=List[FraudResult], dependencies=[Depends(require_admin)])
 def history(limit: int = 20, db: Session = Depends(get_db)):
     """Latest fraud checks (Safe and Flagged) - handy for debugging."""
     rows = db.query(FraudCheck).order_by(FraudCheck.created_at.desc()).limit(limit).all()
