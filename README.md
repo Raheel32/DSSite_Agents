@@ -17,6 +17,34 @@ WordPress / WooCommerce grocery store (Discount Shop). Built as the Saylani Agen
 > The agent service runs on Render's free tier, which sleeps when idle. The first request after a
 > quiet period can take up to a minute.
 
+## What it does
+
+The API is intended to let a website call agent workflows over HTTP
+instead of embedding the agent logic directly into the website. The
+repository includes five agent workflows:
+
+1.  **Refund and escalation**: classifies a customer's message,
+    evaluates order facts against configurable rules, and routes some
+    requests to an administrator for review.
+2.  **Product discovery and recommendations**: parses a shopper's query,
+    searches the catalog maintained by the service, and ranks matching
+    products.
+3.  **Competitor pricing audit**: uses Tavily web search and price
+    extraction/review logic to produce pricing-audit results.
+4.  **Order fraud screening**: calculates a risk score from supplied
+    order signals and returns a verdict. The current implementation
+    contains example IP blocklist entries and configurable rule
+    thresholds; this is a screening aid, not proof that an order is
+    fraudulent.
+5.  **Product onboarding and SEO**: accepts product details including an
+    image payload, generates product copy and SEO fields, validates the
+    draft, and supports a WordPress/WooCommerce integration intended to
+    create a draft product.
+
+The repository also contains WordPress PHP snippets for catalog
+synchronization, AI product search, refund requests, administration,
+price audits, and product onboarding.
+
 ## Architecture
 
 ```mermaid
@@ -28,6 +56,11 @@ flowchart LR
     G --> T["Tavily<br/>(web search)"]
     S -. "snippets: order hook, search hook,<br/>admin pages" .- S
 ```
+
+The application entry point is `app.main:app`. On startup, the current
+entry point creates database tables and calls a seed routine. The
+application exposes a health endpoint at `/health` and FastAPI's
+interactive API documentation at `/docs`.
 
 The agents never touch the shop's database. The shop sends the facts an agent needs (order, search
 text, photo, price) and receives a decision. WordPress code lives in small
@@ -42,6 +75,66 @@ text, photo, price) and receives a decision. WordPress code lives in small
 | 3 | **Competitor Pricing Auditor** | Searches Pakistani stores for the same product and pack, reviews the evidence, suggests lower / raise / keep | **Iterative loop** with a `reviewer_node`, tool use (Tavily) |
 | 4 | **Order Fraud Detection** | Scores every new order (IP, payment, speed, repeats) and marks it Safe or Flagged | **Sequential pipeline**, accumulating state reducer |
 | 5 | **Product Onboarding & SEO** | Vendor gives a photo and a name; the agent writes description, SEO title/meta, tags, category | Gemini **Vision**, **iterative refinement** with a `validation_node` |
+
+## Agents and API endpoints
+
+The endpoint names below are based on the current application README and
+router registration. Check `/docs` on your running instance for the
+exact request schemas and response models.
+
+  ------------------------------------------------------------------------------------
+  Agent / capability      Endpoint(s)                          Purpose
+  ----------------------- ------------------------------------ -----------------------
+  Fraud screening         `POST /fraud/check`                  Evaluate order signals
+                                                               and return a risk
+                                                               assessment
+
+  Refund request          `POST /refund/request`               Submit a refund or
+                                                               cancellation request
+                                                               for policy evaluation
+
+  Refund administration   `POST /approve-refund`,              Review pending requests
+                          `GET /refund/requests`               and record an
+                                                               administrative decision
+
+  Refund dashboard        `GET /admin`                         Separate admin
+                                                               dashboard documented by
+                                                               the project
+
+  Product recommendations `POST /recommendations`              Search the service's
+                                                               product catalog using
+                                                               shopper intent
+
+  Catalog management      `POST /catalog/products`,            Add/update or remove
+                          `DELETE /catalog/products/{id}`      catalog items
+
+  Catalog statistics      `GET /catalog/stats`                 Return catalog
+                                                               statistics
+
+  Product onboarding      `POST /onboarding/product`           Generate and validate
+                                                               product information and
+                                                               SEO content
+
+  Competitor pricing      `POST /pricing/audit`,               Run a pricing audit and
+                          `GET /pricing/audits`                retrieve previous
+                                                               audits
+
+  Pricing audit status    `POST /pricing/audits/{id}/status`   Mark an audit
+                                                               suggestion as applied
+                                                               or dismissed
+
+  Service health          `GET /health`                        Basic health response
+
+  Root information        `GET /`                              Return service
+                                                               information and
+                                                               documented endpoint
+                                                               names
+  ------------------------------------------------------------------------------------
+
+Administrative endpoints and website-facing endpoints may use different
+keys. Configure and verify authentication in the actual route
+implementation before exposing the service publicly.
+
 
 Design rules used across the agents:
 
@@ -67,6 +160,36 @@ docs/                     BRD and UAT checklist
 test_*.py                 one self-test per agent
 render.yaml               Render blueprint (web service + PostgreSQL)
 ```
+## Project layout
+
+Key paths documented or referenced by the repository include:
+
+``` text
+DSSite_Agents/
+├── app/
+│   ├── main.py
+│   ├── agents/
+│   │   ├── refund_agent.py
+│   │   ├── discovery_agent.py
+│   │   ├── fraud_agent.py
+│   │   ├── pricing_agent.py
+│   │   └── onboarding_agent.py
+│   ├── routers/
+│   ├── database.py
+│   └── seed.py
+├── wordpress/
+├── .env.example
+├── requirements.txt
+├── render.yaml
+├── test_refund.py
+├── test_discovery.py
+├── test_fraud.py
+├── test_pricing.py
+└── test_onboarding.py
+```
+
+This is a high-level guide to the key paths referenced by the project,
+not a guarantee that every folder contains only the files shown above.
 
 ## Run it locally
 
@@ -170,5 +293,36 @@ The manual acceptance tests are in [`docs/UAT_Checklist.xlsx`](docs/UAT_Checklis
 
 * Free-tier hosting sleeps when idle; a keep-alive ping or a paid instance removes the delay.
 * Web prices can be outdated or from marketplaces with several sellers; the pricing agent shows its sources for a human to judge.
-* Approving a refund records the decision; the actual WooCommerce refund is still done by a person.
+* Approving a refund records the decision; a person still does the actual WooCommerce refund.
 * Gemini and Tavily free quotas limit how many audits and onboardings can run per day.
+
+## Contributing
+
+Contributions and issue reports are welcome.
+
+1.  Fork the repository and create a focused branch.
+2.  Describe the issue or proposed change.
+3.  Add or update tests for the behavior being changed.
+4.  Run the relevant test scripts and report any required environment
+    variables or external services.
+5.  Open a pull request with a clear summary and testing notes.
+
+Please do not include API keys, credentials, real customer records, or
+production order data in issues, commits, or test fixtures.
+
+## License
+
+## License
+
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+
+## Disclaimer
+
+This project provides agent workflows and integrations for
+experimentation and development. Generated product copy,
+recommendations, pricing research, refund routing, and fraud assessments
+should be reviewed and validated for the intended business context. Do
+not treat outputs as guaranteed accurate or use the service with live
+transactions until appropriate testing, security review, and operational
+controls are in place.
+
