@@ -1,6 +1,5 @@
 ![DSSite Agents: AI-Powered Agents for WordPress and WooCommerce](assets/dssite-agents-thumbnail.png)
 
-# DSSite Agents
 
 # AI Agents for E-Commerce (FastAPI + LangGraph)
 
