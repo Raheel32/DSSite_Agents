@@ -1,3 +1,7 @@
+![DSSite Agents: AI-Powered Agents for WordPress and WooCommerce](assets/dssite-agents-thumbnail.png)
+
+# DSSite Agents
+
 # AI Agents for E-Commerce (FastAPI + LangGraph)
 
 Five LangGraph agents that plug into **any** online shop over HTTPS, demonstrated on a live
